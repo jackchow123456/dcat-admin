@@ -6,6 +6,7 @@ use Dcat\Admin\Admin;
 use Dcat\Admin\Support\Helper;
 use Dcat\Admin\Traits\HasHtmlAttributes;
 use Illuminate\Contracts\Support\Renderable;
+use Illuminate\Http\Request;
 
 /**
  * Class Action.
@@ -395,7 +396,19 @@ SCRIPT;
 process.then(actionResolver).catch(actionCatcher);
 SCRIPT;
     }
-    
 
+    /**
+     * @param Request $request
+     *
+     * @return $this
+     */
+    public function validate(Request $request)
+    {
+        if ($this->interactor instanceof Interactor\Form) {
+            $this->interactor->validate($request);
+        }
+
+        return $this;
+    }
 
 }
