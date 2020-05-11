@@ -27,8 +27,6 @@ abstract class Action implements Renderable
      */
     protected $primaryKey;
 
-    public $interactor;
-
     /**
      * @var string
      */
@@ -68,6 +66,9 @@ abstract class Action implements Renderable
      * @var array
      */
     protected $htmlClasses = [];
+
+    public $interactor;
+    public $hasRender = false;
 
     /**
      * Action constructor.

@@ -19,8 +19,6 @@ class Form extends Interactor
     public $fields = [];
 
 
-    static $hasRender = false;
-
     /**
      * @var string
      */
@@ -421,10 +419,10 @@ class Form extends Interactor
 
         $modal = '';
 
-        if (!self::$hasRender)
+        if (!$this->action->hasRender)
             $modal = view('admin::actions.form.modal', $data)->render();
 
-        self::$hasRender = true;
+        $this->action->hasRender= true;
 
         Admin::html($modal);
     }

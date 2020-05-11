@@ -4,7 +4,6 @@ namespace Dcat\Admin\Controllers;
 
 use Dcat\Admin\Actions\Action;
 use Dcat\Admin\Actions\Response;
-use Dcat\Admin\Grid\GridAction;
 use Exception;
 use Illuminate\Http\Request;
 
@@ -18,23 +17,21 @@ class HandleActionController
     public function handle(Request $request)
     {
         $action = $this->resolveActionInstance($request);
+        $arguments = [];
 
         $action->setKey($request->get('_key'));
-        $arguments = [];
 
         if (! $action->passesAuthorization()) {
             return $action->failedAuthorization();
         }
 
         try {
-            $response = $action->validate($request)->handle(
-                ...$this->resolveActionArgs($request, ...$arguments)
-            );
+            $response = $action->validate($request)->handle($request);
         } catch (Exception $exception) {
             return Response::withException($exception)->send();
         }
 
-        $response = $action->handle($request);
+//        $response = $action->handle($request);
 
         return $response instanceof Response ? $response->send() : $response;
     }
