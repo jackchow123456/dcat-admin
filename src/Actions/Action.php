@@ -26,6 +26,8 @@ abstract class Action implements Renderable
      */
     protected $primaryKey;
 
+    public $interactor;
+
     /**
      * @var string
      */
@@ -49,7 +51,7 @@ abstract class Action implements Renderable
     /**
      * @var string
      */
-    protected $event = 'click';
+    public $event = 'click';
 
     /**
      * @var bool
@@ -75,6 +77,25 @@ abstract class Action implements Renderable
     {
         if ($title) {
             $this->title = $title;
+        }
+        $this->initInteractor();
+    }
+
+    /**
+     * @throws \Exception
+     */
+    protected function initInteractor()
+    {
+        if ($hasForm = method_exists($this, 'form')) {
+            $this->interactor = new Interactor\Form($this);
+        }
+
+        if ($hasDialog = method_exists($this, 'dialog')) {
+//            $this->interactor = new Interactor\Dialog($this);
+        }
+
+        if ($hasForm && $hasDialog) {
+            throw new \Exception('Can only define one of the methods in `form` and `dialog`');
         }
     }
 
@@ -283,4 +304,98 @@ HTML;
     {
         return new static(...$params);
     }
+
+
+    /**
+     * @param string $method
+     * @param array $arguments
+     *
+     * @throws \Exception
+     *
+     * @return mixed
+     */
+    public function __call($method, $arguments = [])
+    {
+        if (in_array($method, Interactor\Interactor::$elements)) {
+            return $this->interactor->{$method}(...$arguments);
+        }
+
+        throw new \BadMethodCallException("Method {$method} does not exist.");
+    }
+
+    /**
+     * @return string
+     */
+    public function getMethod()
+    {
+        return $this->method;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getCalledClass()
+    {
+        return str_replace('\\', '_', get_called_class());
+    }
+
+
+    /**
+     * @return string
+     */
+    public function handleActionPromise()
+    {
+        $resolve = <<<'SCRIPT'
+var actionResolver = function (data) {
+
+            var response = data[0];
+            var target   = data[1];
+                
+            if (typeof response !== 'object') {
+                return Dcat.swal({type: 'error', title: 'Oops!'});Ø
+            }
+            
+            var then = function (then) {
+                if (then.action == 'refresh') {
+                    Dcat.reload();
+                }
+                
+                if (then.action == 'download') {
+                    window.open(then.value, '_blank');
+                }
+                
+                if (then.action == 'redirect') {
+                    Dcat.redirect(then.value);
+                }
+                
+                if (then.action == 'location') {
+                    window.location = then.value;
+                }
+            };
+            
+            if (typeof response.data.message === 'string' && response.data.type) {
+                Dcat[response.data.type](response.data.message);
+            }
+            
+            if (response.data.then) {
+              then(response.data.then);
+            }
+        };
+        
+        var actionCatcher = function (request) {
+            if (request && typeof request.responseJSON === 'object') {
+                Dcat.toastr.error(request.responseJSON.message, '', {positionClass:"toast-bottom-center", timeOut: 10000}).css("width","500px")
+            }
+        };
+SCRIPT;
+
+        Admin::script($resolve);
+
+        return <<<'SCRIPT'
+process.then(actionResolver).catch(actionCatcher);
+SCRIPT;
+    }
+    
+
+
 }

@@ -74,6 +74,9 @@ trait HasActionHandler
      */
     protected function addHandlerScript()
     {
+        if ($this->interactor) {
+            return $this->interactor->addScript();
+        }
         $data = json_encode($this->parameters());
         $confirm = $this->confirm();
         $confirm = $confirm ? json_encode((array) $confirm) : 'false';
