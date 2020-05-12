@@ -419,10 +419,10 @@ class Form extends Interactor
 
         $modal = '';
 
-        if (!$this->action->hasRender)
+        if (!isset($this->action::$hasRender[$this->action->getCalledClass()]))
             $modal = view('admin::actions.form.modal', $data)->render();
 
-        $this->action->hasRender= true;
+        $this->action::$hasRender[$this->action->getCalledClass()] = true;
 
         Admin::html($modal);
     }

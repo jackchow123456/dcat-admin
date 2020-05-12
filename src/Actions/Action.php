@@ -68,7 +68,7 @@ abstract class Action implements Renderable
     protected $htmlClasses = [];
 
     public $interactor;
-    public $hasRender = false;
+    public static $hasRender = [];
 
     /**
      * Action constructor.
